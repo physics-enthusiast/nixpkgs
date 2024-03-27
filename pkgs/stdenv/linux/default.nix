@@ -230,7 +230,7 @@ in
     # ceases to be the case the conditional in stageFun must be modified.
     stdenv = {
       inherit derivationArgTransform;
-    }; 
+    };
   })
 
   # Build a dummy stdenv with no GCC or working fetchurl.  This is
