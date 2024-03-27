@@ -114,7 +114,7 @@ in
     __raw = true;
 
     stdenv = makeStdenv {
-      inherit derivationArgTransform
+      inherit derivationArgTransform;
       cc = null;
       fetchurl = null;
     };

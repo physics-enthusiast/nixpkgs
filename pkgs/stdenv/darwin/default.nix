@@ -130,7 +130,7 @@ let
         targetPlatform = localSystem;
 
         inherit config extraNativeBuildInputs;
-        inherit (prevStage.stdenv) derivationArgTransform
+        inherit (prevStage.stdenv) derivationArgTransform;
 
         extraBuildInputs = [ prevStage.darwin.CF ];
 
