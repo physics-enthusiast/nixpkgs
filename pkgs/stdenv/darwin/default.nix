@@ -206,7 +206,7 @@ in
     # If that ceases to be the case the conditional in stageFun must be modified.
     # Similar to the linux stdenv bootstrap, but with clang instead of gcc.
     stdenv = {
-      inherit derivationArgTransform
+      inherit derivationArgTransform;
     };
   })
 
