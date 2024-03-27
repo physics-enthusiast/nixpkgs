@@ -201,7 +201,7 @@ in
     };
 
     stdenv = import ../generic {
-      inherit derivationArgTransform
+      inherit derivationArgTransform;
       name = "stdenv-freebsd-boot-1";
       buildPlatform = localSystem;
       hostPlatform = localSystem;
