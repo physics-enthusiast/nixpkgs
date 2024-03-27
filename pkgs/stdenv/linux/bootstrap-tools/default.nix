@@ -1,4 +1,4 @@
-# no lib.id so we use args: args as default
+# no lib.id so we use (args: args) as a substitute
 { system, bootstrapFiles, derivationArgTransform ? (args: args), extraAttrs }:
 
 derivation (derivationArgTransform ({
