@@ -31,7 +31,10 @@
 , uringSupport ? stdenv.isLinux, liburing
 , canokeySupport ? false, canokey-qemu
 , capstoneSupport ? !toolsOnly, capstone
+, pluginsSupport ? !stdenv.hostPlatform.isStatic
 , enableDocs ? true
+, enableTools ? true
+, enableBlobs ? true
 , hostCpuOnly ? false
 , hostCpuTargets ? (if toolsOnly
                     then [ ]
@@ -70,8 +73,9 @@ stdenv.mkDerivation (finalAttrs: {
     pkg-config flex bison dtc meson ninja
 
     # Don't change this to python3 and python3.pkgs.*, breaks cross-compilation
-    python3Packages.python python3Packages.sphinx python3Packages.sphinx-rtd-theme
+    python3Packages.python
   ]
+    ++ lib.optionals enableDocs [ python3Packages.sphinx python3Packages.sphinx-rtd-theme ]
     ++ lib.optionals gtkSupport [ wrapGAppsHook ]
     ++ lib.optionals hexagonSupport [ glib ]
     ++ lib.optionals stdenv.isDarwin [ sigtool ];
@@ -108,6 +112,7 @@ stdenv.mkDerivation (finalAttrs: {
     ++ lib.optionals capstoneSupport [ capstone ];
 
   dontUseMesonConfigure = true; # meson's configurePhase isn't compatible with qemu build
+  dontAddStaticConfigureFlags = true;
 
   outputs = [ "out" ] ++ lib.optional guestAgentSupport "ga";
   # On aarch64-linux we would shoot over the Hydra's 2G output limit.
@@ -136,7 +141,10 @@ stdenv.mkDerivation (finalAttrs: {
       revert = true;
     })
   ]
-  ++ lib.optional nixosTestRunner ./force-uid0-on-9p.patch;
+  ++ lib.optional nixosTestRunner ./force-uid0-on-9p.patch
+
+  # Remove for QEMU 8.1
+  ++ lib.optional stdenv.hostPlatform.isStatic ./aio-find-static-library.patch;
 
   postPatch = ''
     # Otherwise tries to ensure /var/run exists.
@@ -160,7 +168,7 @@ stdenv.mkDerivation (finalAttrs: {
   configureFlags = [
     "--disable-strip" # We'll strip ourselves after separating debug info.
     (lib.enableFeature enableDocs "docs")
-    "--enable-tools"
+    (lib.enableFeature enableTools "tools")
     "--localstatedir=/var"
     "--sysconfdir=/etc"
     "--cross-prefix=${stdenv.cc.targetPrefix}"
@@ -184,7 +192,12 @@ stdenv.mkDerivation (finalAttrs: {
     ++ lib.optional smbdSupport "--smbd=${samba}/bin/smbd"
     ++ lib.optional uringSupport "--enable-linux-io-uring"
     ++ lib.optional canokeySupport "--enable-canokey"
-    ++ lib.optional capstoneSupport "--enable-capstone";
+    ++ lib.optional capstoneSupport "--enable-capstone"
+    ++ lib.optional (!pluginsSupport) "--disable-plugins"
+    ++ lib.optional (!enableBlobs) "--disable-install-blobs"
+
+    # FIXME: "multiple definition of `strtoll'" with libnbcompat
+    ++ lib.optional stdenv.hostPlatform.isStatic "--static --extra-ldflags=-Wl,--allow-multiple-definition";
 
   dontWrapGApps = true;
 
@@ -248,7 +261,9 @@ stdenv.mkDerivation (finalAttrs: {
 
   # Add a ‘qemu-kvm’ wrapper for compatibility/convenience.
   postInstall = lib.optionalString (!toolsOnly) ''
-    ln -s $out/bin/qemu-system-${stdenv.hostPlatform.qemuArch} $out/bin/qemu-kvm
+    if [ -f $out/bin/qemu-system-${stdenv.hostPlatform.qemuArch} ]; then
+      ln -s $out/bin/qemu-system-${stdenv.hostPlatform.qemuArch} $out/bin/qemu-kvm
+    fi
   '';
 
   passthru = {
