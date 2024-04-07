@@ -201,7 +201,7 @@ stdenv.mkDerivation (finalAttrs: {
     ++ lib.optionals stdenv.hostPlatform.isStatic [
       "--static"
       # FIXME: "multiple definition of `strtoll'" with libnbcompat
-      "--extra-ldflags=-Wl,--allow-multiple-definition"
+      "--extra-ldflags=-Wl,--allow-multiple-definition -latomic"
       "-Dlinux_aio_path=${libaio}/lib"
     ];
 
