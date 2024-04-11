@@ -65,6 +65,7 @@ stdenv.mkDerivation (finalAttrs: {
     repo = "qemu";
     rev = "d0b6b79323726e47b1e9e399870ab063883874d0";
     hash = "sha256-d5y1GnljItNg/9/OT80cUCFLWYLclnVO2mNyVzCt+jI=";
+    fetchSubmodules = true;
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ]
