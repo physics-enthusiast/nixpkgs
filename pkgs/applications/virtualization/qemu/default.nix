@@ -62,7 +62,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   src = fetchzip {
     url = "https://github.com/qemu/qemu/archive/d0b6b79323726e47b1e9e399870ab063883874d0.zip";
-    hash = "sha256-Q8wXaAqqVYb3T5A5jzTp+FeH3/QA07ZA2B93efviZbs=";
+    hash = "sha256-d5y1GnljItNg/9/OT80cUCFLWYLclnVO2mNyVzCt+jI=";
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ]
