@@ -50,6 +50,29 @@
 
 let
   hexagonSupport = hostCpuTargets == null || lib.elem "hexagon" hostCpuTargets;
+  keycodemapdb = fetchFromGitLab {
+    owner = "qemu-project";
+    repo = "keycodemapdb";
+    rev = "f5772a62ec52591ff6870b7e8ef32482371f22c6";
+    hash = "sha256-EQrnBAXQhllbVCHpOsgREzYGncMUPEIoWFGnjo+hrH4=";
+    fetchSubmodules = true;
+  };
+
+  berkeley-softfloat-3 = fetchFromGitLab {
+    owner = "qemu-project";
+    repo = "berkeley-softfloat-3";
+    rev = "b64af41c3276f97f0e181920400ee056b9c88037";
+    hash = "sha256-Yflpx+mjU8mD5biClNpdmon24EHg4aWBZszbOur5VEA=";
+    fetchSubmodules = true;
+  };
+
+  berkeley-testfloat-3 = fetchFromGitLab {
+    owner = "qemu-project";
+    repo = "berkeley-testfloat-3";
+    rev = "e7af9751d9f9fd3b47911f51a5cfd08af256a9ab";
+    hash = "sha256-inQAeYlmuiRtZm37xK9ypBltCJ+ycyvIeIYZK8a+RYU=";
+    fetchSubmodules = true;
+  };
 in
 
 stdenv.mkDerivation (finalAttrs: {
@@ -156,6 +179,20 @@ stdenv.mkDerivation (finalAttrs: {
     # Otherwise tries to ensure /var/run exists.
     sed -i "/install_emptydir(get_option('localstatedir') \/ 'run')/d" \
         qga/meson.build
+
+    # Prefetch Meson subprojects
+    rm subprojects/keycodemapdb.wrap
+    ln -s ${keycodemapdb} subprojects/keycodemapdb
+
+    rm subprojects/berkeley-softfloat-3.wrap
+    cp -r ${berkeley-softfloat-3} subprojects/berkeley-softfloat-3
+    chmod a+w subprojects/berkeley-softfloat-3
+    cp subprojects/packagefiles/berkeley-softfloat-3/* subprojects/berkeley-softfloat-3
+
+    rm subprojects/berkeley-testfloat-3.wrap
+    cp -r ${berkeley-testfloat-3} subprojects/berkeley-testfloat-3
+    chmod a+w subprojects/berkeley-testfloat-3
+    cp subprojects/packagefiles/berkeley-testfloat-3/* subprojects/berkeley-testfloat-3
   '';
 
   preConfigure = ''
