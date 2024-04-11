@@ -60,9 +60,9 @@ stdenv.mkDerivation (finalAttrs: {
     + lib.optionalString toolsOnly "-utils";
   version = "8.1.3";
 
-  src = fetchurl {
-    url = "https://download.qemu.org/qemu-${finalAttrs.version}.tar.xz";
-    hash = "sha256-Q8wXaAQQVYb3T5A5jzTp+FeH3/QA07ZA2B93efviZbs=";
+  src = fetchzip {
+    url = "https://github.com/qemu/qemu/archive/d0b6b79323726e47b1e9e399870ab063883874d0.zip";
+    hash = "sha256-Q8wXaAqqVYb3T5A5jzTp+FeH3/QA07ZA2B93efviZbs=";
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ]
