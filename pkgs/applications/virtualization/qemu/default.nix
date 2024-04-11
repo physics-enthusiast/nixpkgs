@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, fetchzip, fetchpatch, python3Packages, zlib, pkg-config, glib, buildPackages
+{ lib, stdenv, fetchurl, fetchFromGitlab, fetchpatch, python3Packages, zlib, pkg-config, glib, buildPackages
 , pixman, vde2, alsa-lib, texinfo, flex
 , bison, lzo, snappy, libaio, libtasn1, gnutls, nettle, curl, dtc, ninja, meson
 , sigtool
@@ -60,8 +60,10 @@ stdenv.mkDerivation (finalAttrs: {
     + lib.optionalString toolsOnly "-utils";
   version = "8.1.3";
 
-  src = fetchzip {
-    url = "https://github.com/qemu/qemu/archive/d0b6b79323726e47b1e9e399870ab063883874d0.zip";
+  src = fetchFromGitlab {
+    owner = "qemu-project";
+    repo = "qemu";
+    rev = "d0b6b79323726e47b1e9e399870ab063883874d0";
     hash = "sha256-d5y1GnljItNg/9/OT80cUCFLWYLclnVO2mNyVzCt+jI=";
   };
 
