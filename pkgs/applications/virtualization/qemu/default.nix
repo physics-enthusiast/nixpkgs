@@ -69,7 +69,7 @@ let
   berkeley-testfloat-3 = fetchFromGitLab {
     owner = "qemu-project";
     repo = "berkeley-testfloat-3";
-    rev = "7f087a323768585bb6063a1ee05a03a52b6a0b8f";
+    rev = "e7af9751d9f9fd3b47911f51a5cfd08af256a9ab";
     hash = "sha256-inQAeYlmuiRtZm37xK9ypBltCJ+ycyvIeIYZK8a+RYU=";
     fetchSubmodules = true;
   };
@@ -86,7 +86,7 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitLab {
     owner = "qemu-project";
     repo = "qemu";
-    rev = "17780edd81d27fcfdb7a802efc870a99788bd2fc";
+    rev = "7f087a323768585bb6063a1ee05a03a52b6a0b8f";
     hash = "sha256-Tpz+PDBh0yfVOEpJP7jPQLwwdy7aZ0TLEyVl5dBs5Pw=";
     fetchSubmodules = true;
   };
