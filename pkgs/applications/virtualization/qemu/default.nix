@@ -86,8 +86,8 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitLab {
     owner = "qemu-project";
     repo = "qemu";
-    rev = "9358fbbf6e478e0d734756c9b4d547cdf69947d6";
-    hash = "sha256-HfKlll5X8pnxCcfPVc8JfOUWloV7fYVfJmEwmBLXbRA=";
+    rev = "16288ded94417ffb9ce8fa141f5ff6cff3800a60";
+    hash = "sha256-21dk1bYTseQLIrCZSEi8i/+tW4Jb+07jLil6MU0AkCc=";
     fetchSubmodules = true;
   };
 
