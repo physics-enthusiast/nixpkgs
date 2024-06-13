@@ -14,9 +14,9 @@ let
     buildPackages writeScript writeText runCommand;
 in
 rec {
-  qemu-common = import ../../../nixos/lib/qemu-common.nix { inherit lib; pkgs=buildPackages; };
+  qemu-common = import ../../../nixos/lib/qemu-common.nix { inherit lib pkgs; };
 
-  qemu = buildPackages.qemu_kvm;
+  qemu = buildPackages.qemu;
 
   modulesClosure = pkgs.makeModulesClosure {
     inherit kernel rootModules;
@@ -333,7 +333,6 @@ rec {
      that allows you to boot into the VM and debug it interactively. */
 
   runInLinuxVM = drv: lib.overrideDerivation drv ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
-    requiredSystemFeatures = [ "kvm" ];
     builder = "${bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     origArgs = args;
