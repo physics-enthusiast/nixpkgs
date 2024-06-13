@@ -14,7 +14,7 @@ let
     buildPackages writeScript writeText runCommand;
 in
 rec {
-  qemu-common = import ../../../nixos/lib/qemu-common.nix { inherit lib pkgs; };
+  qemu-common = import ../../../nixos/lib/qemu-common.nix { inherit lib; pkgs=buildPackages; };
 
   qemu = buildPackages.qemu_kvm;
 
