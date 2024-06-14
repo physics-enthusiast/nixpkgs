@@ -12,6 +12,50 @@ let
   inherit (pkgs) bash bashInteractive busybox cpio coreutils e2fsprogs fetchurl kmod rpm
     stdenv util-linux
     buildPackages writeScript writeText runCommand;
+  depAttrNames = [
+    "depsBuildBuild" 
+    "depsBuildBuildPropagated"
+    "nativeBuildInputs" 
+    "propagatedNativeBuildInputs"
+    "depsBuildTarget"
+    "depsBuildTargetPropagated"
+    "depsHostHost"
+    "depsHostHostPropagated"
+    "buildInputs"
+    "propagatedBuildInputs"
+    "depsTargetTarget"
+    "depsTargetTargetPropagated"
+    "checkInputs"
+    "installCheckInputs"
+    "nativeCheckInputs"
+    "nativeInstallCheckInputs"
+  ];
+  guestDerivation = drv:
+    if drv ? "overrideAttrs" then
+      # produced by mkDerivation
+      drv.overrideAttrs (prev:
+        lib.genAttrs depAttrNames (name:
+        let
+          deps = prev."${name}" or [];
+        in
+          lib.forEach deps (old:
+            if old ? "__spliced" then
+              old // {
+                __spliced = {
+                  buildBuild = old.__spliced.hostHost;
+                  buildHost = old.__spliced.hostTarget;
+                  buildTarget = old.__spliced.hostTarget;
+                  hostHost = old.__spliced.targetTarget;
+                  hostTarget = old.__spliced.targetTarget;
+                };
+              }
+            else
+              old
+          )
+        )
+      )
+    else
+      drv;
 in
 rec {
   qemu-common = import ../../../nixos/lib/qemu-common.nix { inherit lib pkgs; };
@@ -332,7 +376,7 @@ rec {
      `run-vm' will be left behind in the temporary build directory
      that allows you to boot into the VM and debug it interactively. */
 
-  runInLinuxVM = drv: lib.overrideDerivation drv ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
+  runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
     builder = "${bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     origArgs = args;
