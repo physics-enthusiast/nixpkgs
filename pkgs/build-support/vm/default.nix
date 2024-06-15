@@ -30,6 +30,19 @@ let
     "nativeCheckInputs"
     "nativeInstallCheckInputs"
   ];
+  guestInput = input:
+    if input ? "__spliced" then
+      input // {
+        __spliced = {
+          buildBuild = input.__spliced.hostHost;
+          buildHost = input.__spliced.hostTarget;
+          buildTarget = input.__spliced.hostTarget;
+          hostHost = input.__spliced.targetTarget;
+          hostTarget = input.__spliced.targetTarget;
+        };
+      }
+    else
+      input;
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
       # produced by mkDerivation
@@ -38,20 +51,7 @@ let
         let
           deps = prev."${name}" or [];
         in
-          lib.forEach deps (old:
-            if old ? "__spliced" then
-              old // {
-                __spliced = {
-                  buildBuild = old.__spliced.hostHost;
-                  buildHost = old.__spliced.hostTarget;
-                  buildTarget = old.__spliced.hostTarget;
-                  hostHost = old.__spliced.targetTarget;
-                  hostTarget = old.__spliced.targetTarget;
-                };
-              }
-            else
-              old
-          )
+          builtins.map guestInput deps
         )
       )
     else
@@ -380,7 +380,7 @@ rec {
     builder = "${buildPackages.bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     origArgs = args;
-    origBuilder = builder;
+    origBuilder = guestInput builder;
     QEMU_OPTS = "${QEMU_OPTS} -m ${toString memSize}";
     passAsFile = []; # HACK fix - see https://github.com/NixOS/nixpkgs/issues/16742
   });
