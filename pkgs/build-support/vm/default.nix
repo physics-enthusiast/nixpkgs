@@ -41,6 +41,7 @@ let
       }
     else
       input;
+  # dubious shenanigans
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
       # produced by mkDerivation
