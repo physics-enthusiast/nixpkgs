@@ -30,6 +30,7 @@ let
     "nativeCheckInputs"
     "nativeInstallCheckInputs"
   ];
+  # shift a single build input one platform forward
   guestInput = input:
     if input ? "__spliced" then
       input // {
@@ -41,26 +42,28 @@ let
       }
     else
       input;
-  # dubious shenanigans
-  guestDerivation = drv:
-    if drv ? "overrideAttrs" then
-      # produced by mkDerivation
-      drv.overrideAttrs (prev:
+  # extract all the arguments passed to mkDerivation but shifted one platform forward
+  guestArguments = drv:
+    drv.overrideAttrs (prev: {
+      passthru = prev //
         (lib.genAttrs depAttrNames (name:
         let
           deps = prev."${name}" or [];
         in
           builtins.map guestInput deps
-        )) // {
-          realBuilder = if prev ? "realBuilder" then
-            prev.realBuilder.__spliced.hostHost or prev.realBuilder
-          else
-            # pkgs.stdenv.shell is a shell on the buildPlatform, hence to get
-            # a hostPlatform shell we unfortunately must reference the next
-            # stage, targetPackages.
-            targetPackages.stdenv.shell or targetPackages.stdenv.cc.shell;
-        }
-      )
+        )) // lib.optionalAttrs (prev ? "realBuilder") {
+          realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder
+        };
+      }
+    ).passthru
+  # dubious shenanigans
+  guestDerivation = drv:
+    if drv ? "overrideAttrs" then
+      # pass the mkDerivation arguments shifted one platform forward to a
+      # mkDerivation that is itself shifted one platform forward. We do this
+      # so all the mkDerivation internal shell scripts also pull from the
+      # packageset of the guest platform.
+      pkgs.targetPackages.stdenv.mkDerivation (guestArguments drv)
     else
       drv;
 in
