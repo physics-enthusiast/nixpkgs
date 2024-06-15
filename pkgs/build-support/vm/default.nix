@@ -59,7 +59,7 @@ let
         )) // lib.optionalAttrs (prev ? "realBuilder") {
           realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
         }
-      );
+      )
     else
       drv;
 in
