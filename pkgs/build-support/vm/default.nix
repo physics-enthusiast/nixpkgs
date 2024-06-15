@@ -30,6 +30,11 @@ let
     "nativeCheckInputs"
     "nativeInstallCheckInputs"
   ];
+  # extract all the arguments passed to mkDerivation
+  toArgs = drv:
+    drv.overrideAttrs (prev: {
+      passthru = prev;
+    }).passthru;
   # shift a single build input one platform forward
   guestInput = input:
     if input ? "__spliced" then
@@ -44,18 +49,16 @@ let
       input;
   # extract all the arguments passed to mkDerivation but shifted one platform forward
   guestArguments = drv:
-    drv.overrideAttrs (prev: {
-      passthru = prev //
-        (lib.genAttrs depAttrNames (name:
-        let
-          deps = prev."${name}" or [];
-        in
-          builtins.map guestInput deps
-        )) // lib.optionalAttrs (prev ? "realBuilder") {
-          realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
-        };
+    toArgs (drv.overrideAttrs (prev: {
+      (lib.genAttrs depAttrNames (name:
+      let
+        deps = prev."${name}" or [];
+      in
+        builtins.map guestInput deps
+      )) // lib.optionalAttrs (prev ? "realBuilder") {
+        realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
       }
-    ).passthru;
+    }));
   # dubious shenanigans
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
@@ -63,7 +66,15 @@ let
       # mkDerivation that is itself shifted one platform forward. We do this
       # so all the mkDerivation internal shell scripts also pull from the
       # packageset of the guest platform.
-      pkgs.targetPackages.stdenv.mkDerivation (guestArguments drv)
+      (pkgs.stdenv.mkDerivation (guestArguments drv)).overrideDerivation (prev: {
+        # convert initialPath from buildPlatform to hostPlatform
+        initialPath = lib.forEach prev.initialPath (maybeDrv:
+          if maybeDrv ? "overrideAttrs" then
+            pkgs.stdenv.mkDerivation (toArgs maybeDrv)
+          else
+            maybeDrv
+        );
+      })
     else
       drv;
 in
