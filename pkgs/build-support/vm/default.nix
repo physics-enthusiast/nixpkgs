@@ -55,7 +55,7 @@ let
           realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
         };
       }
-    ).passthru
+    ).passthru;
   # dubious shenanigans
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
