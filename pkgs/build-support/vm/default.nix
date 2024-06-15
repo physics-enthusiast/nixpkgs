@@ -33,8 +33,8 @@ let
   # extract all the arguments passed to mkDerivation
   toArgs = drv:
     (drv.overrideAttrs (prev: {
-      passthru = prev;
-    })).passthru;
+      passthruArgs = prev;
+    })).passthruArgs;
   # shift a single build input one platform forward
   guestInput = input:
     if input ? "__spliced" then
@@ -66,15 +66,7 @@ let
       # mkDerivation that is itself shifted one platform forward. We do this
       # so all the mkDerivation internal shell scripts also pull from the
       # packageset of the guest platform.
-      (pkgs.stdenv.mkDerivation (guestArguments drv)).overrideDerivation (prev: {
-        # convert initialPath from buildPlatform to hostPlatform
-        initialPath = lib.forEach prev.initialPath (maybeDrv:
-          if maybeDrv ? "overrideAttrs" then
-            pkgs.stdenv.mkDerivation (toArgs maybeDrv)
-          else
-            maybeDrv
-        );
-      })
+      pkgs.stdenv.mkDerivation (guestArguments drv)
     else
       drv;
 in
@@ -400,6 +392,13 @@ rec {
   runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
     builder = "${buildPackages.bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
+    # convert initialPath from buildPlatform to hostPlatform
+    initialPath = lib.forEach prev.initialPath (maybeDrv:
+      if maybeDrv ? "overrideAttrs" then
+        pkgs.stdenv.mkDerivation (toArgs maybeDrv)
+      else
+        maybeDrv
+    );
     origArgs = args;
     origBuilder = builder;
     QEMU_OPTS = "${QEMU_OPTS} -m ${toString memSize}";
