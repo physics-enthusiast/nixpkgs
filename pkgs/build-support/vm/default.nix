@@ -54,7 +54,10 @@ let
           realBuilder = if prev ? "realBuilder" then
             prev.realBuilder.__spliced.hostHost or prev.realBuilder
           else
-            buildPackages.stdenv.shell;
+            # pkgs.stdenv.shell is a shell on the buildPlatform, hence to get
+            # a hostPlatform shell we unfortunately must reference the next
+            # stage, targetPackages.
+            targetPackages.stdenv.shell or targetPackages.stdenv.cc.shell;
         }
       )
     else
