@@ -11,7 +11,7 @@
 let
   inherit (pkgs) bash bashInteractive busybox cpio coreutils e2fsprogs fetchurl kmod rpm
     stdenv util-linux
-    buildPackages writeScript writeText runCommand;
+    buildPackages targetPackages writeScript writeText runCommand;
   depAttrNames = [
     "depsBuildBuild" 
     "depsBuildBuildPropagated"
