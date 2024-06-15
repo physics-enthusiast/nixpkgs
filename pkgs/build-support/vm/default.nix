@@ -32,9 +32,9 @@ let
   ];
   # extract all the arguments passed to mkDerivation
   toArgs = drv:
-    drv.overrideAttrs (prev: {
+    (drv.overrideAttrs (prev: {
       passthru = prev;
-    }).passthru;
+    })).passthru;
   # shift a single build input one platform forward
   guestInput = input:
     if input ? "__spliced" then
