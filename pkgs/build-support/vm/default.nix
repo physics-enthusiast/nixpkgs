@@ -35,10 +35,8 @@ let
       input // {
         __spliced = {
           buildBuild = input.__spliced.hostHost;
-          buildHost = input.__spliced.hostTarget;
+          buildHost = input.__spliced.hostHost;
           buildTarget = input.__spliced.hostTarget;
-          hostHost = input.__spliced.targetTarget;
-          hostTarget = input.__spliced.targetTarget;
         };
       }
     else
@@ -47,12 +45,17 @@ let
     if drv ? "overrideAttrs" then
       # produced by mkDerivation
       drv.overrideAttrs (prev:
-        lib.genAttrs depAttrNames (name:
+        (lib.genAttrs depAttrNames (name:
         let
           deps = prev."${name}" or [];
         in
           builtins.map guestInput deps
-        )
+        )) // {
+          realBuilder = if prev ? "realBuilder" then
+            prev.realBuilder.__spliced.hostHost or prev.realBuilder
+          else
+            buildPackages.stdenv.shell;
+        }
       )
     else
       drv;
@@ -380,7 +383,7 @@ rec {
     builder = "${buildPackages.bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     origArgs = args;
-    origBuilder = guestInput builder;
+    origBuilder = builder;
     QEMU_OPTS = "${QEMU_OPTS} -m ${toString memSize}";
     passAsFile = []; # HACK fix - see https://github.com/NixOS/nixpkgs/issues/16742
   });
