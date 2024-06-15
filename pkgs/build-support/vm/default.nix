@@ -278,7 +278,7 @@ rec {
   vmRunCommand = qemuCommand: writeText "vm-run" ''
     export > saved-env
 
-    PATH=${coreutils}/bin
+    PATH=${buildPackages.coreutils}/bin
     mkdir xchg
     mv saved-env xchg/
 
@@ -296,7 +296,7 @@ rec {
     # debug inside the VM if the build fails (when Nix is called with
     # the -K option to preserve the temporary build directory).
     cat > ./run-vm <<EOF
-    #! ${bash}/bin/sh
+    #! ${buildPackages.bash}/bin/sh
     ''${diskImage:+diskImage=$diskImage}
     TMPDIR=$TMPDIR
     cd $TMPDIR
