@@ -52,7 +52,7 @@ let
         in
           builtins.map guestInput deps
         )) // lib.optionalAttrs (prev ? "realBuilder") {
-          realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder
+          realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
         };
       }
     ).passthru
