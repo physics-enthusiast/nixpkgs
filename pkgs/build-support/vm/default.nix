@@ -47,26 +47,19 @@ let
       }
     else
       input;
-  # extract all the arguments passed to mkDerivation but shifted one platform forward
-  guestArguments = drv:
-    toArgs (drv.overrideAttrs (prev:
-      (lib.genAttrs depAttrNames (name:
-      let
-        deps = prev."${name}" or [];
-      in
-        builtins.map guestInput deps
-      )) // lib.optionalAttrs (prev ? "realBuilder") {
-        realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
-      }
-    ));
   # dubious shenanigans
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
-      # pass the mkDerivation arguments shifted one platform forward to a
-      # mkDerivation that is itself shifted one platform forward. We do this
-      # so all the mkDerivation internal shell scripts also pull from the
-      # packageset of the guest platform.
-      pkgs.stdenv.mkDerivation (guestArguments drv)
+      drv.overrideAttrs (prev:
+        (lib.genAttrs depAttrNames (name:
+        let
+          deps = prev."${name}" or [];
+        in
+          builtins.map guestInput deps
+        )) // lib.optionalAttrs (prev ? "realBuilder") {
+          realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
+        }
+      );
     else
       drv;
 in
@@ -243,6 +236,7 @@ rec {
       ${coreutils}/bin/ln -s ${bash}/bin/sh /bin/sh
     fi
 
+
     # Set up automatic kernel module loading.
     export MODULE_DIR=${kernel}/lib/modules/
     ${coreutils}/bin/cat <<EOF > /run/modprobe
@@ -389,11 +383,11 @@ rec {
      `run-vm' will be left behind in the temporary build directory
      that allows you to boot into the VM and debug it interactively. */
 
-  runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
+  runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, initialPath, ... }: {
     builder = "${buildPackages.bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     # convert initialPath from buildPlatform to hostPlatform
-    initialPath = lib.forEach prev.initialPath (maybeDrv:
+    initialPath = lib.forEach initialPath (maybeDrv:
       if maybeDrv ? "overrideAttrs" then
         pkgs.stdenv.mkDerivation (toArgs maybeDrv)
       else
