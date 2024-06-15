@@ -383,11 +383,11 @@ rec {
      `run-vm' will be left behind in the temporary build directory
      that allows you to boot into the VM and debug it interactively. */
 
-  runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, initialPath, ... }: {
+  runInLinuxVM = drv: lib.overrideDerivation (guestDerivation drv) ({ memSize ? 512, QEMU_OPTS ? "", args, builder, ... }: {
     builder = "${buildPackages.bash}/bin/sh";
     args = ["-e" (vmRunCommand qemuCommandLinux)];
     # convert initialPath from buildPlatform to hostPlatform
-    initialPath = lib.forEach initialPath (maybeDrv:
+    initialPath = lib.forEach pkgs.stdenv.initialPath (maybeDrv:
       if maybeDrv ? "overrideAttrs" then
         pkgs.stdenv.mkDerivation (toArgs maybeDrv)
       else
