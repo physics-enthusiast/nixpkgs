@@ -49,7 +49,7 @@ let
       input;
   # extract all the arguments passed to mkDerivation but shifted one platform forward
   guestArguments = drv:
-    toArgs (drv.overrideAttrs (prev: {
+    toArgs (drv.overrideAttrs (prev:
       (lib.genAttrs depAttrNames (name:
       let
         deps = prev."${name}" or [];
@@ -58,7 +58,7 @@ let
       )) // lib.optionalAttrs (prev ? "realBuilder") {
         realBuilder = prev.realBuilder.__spliced.hostHost or prev.realBuilder;
       }
-    }));
+    ));
   # dubious shenanigans
   guestDerivation = drv:
     if drv ? "overrideAttrs" then
