@@ -231,6 +231,7 @@ in
 
         echo "converting image to VirtualBox format..."
         VBoxManage convertfromraw $diskImage disk.vdi
+        VBoxManage modifymedium --compact disk.vdi
 
         ${lib.optionalString (cfg.extraDisk != null) ''
           echo "creating extra disk: data-disk.raw"
