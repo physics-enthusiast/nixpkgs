@@ -263,7 +263,7 @@ in
 
         echo "exporting VirtualBox VM..."
         mkdir -p $out
-        fn="$out/${config.image.fileName}"
+        fn="$out/${config.image.baseName}.ova"
         VBoxManage export "$vmName" --output "$fn" --options manifest ${lib.escapeShellArgs cfg.exportParams}
         ${cfg.postExportCommands}
 
