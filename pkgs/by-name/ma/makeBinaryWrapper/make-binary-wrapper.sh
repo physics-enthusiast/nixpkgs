@@ -31,6 +31,7 @@ assertExecutable() {
 #                          (that is, *after* any arguments passed on the command line)
 # --add-flags    ARGS    : prepend the whitespace-separated list of arguments ARGS to the invocation of the executable
 # --append-flags ARGS    : append the whitespace-separated list of arguments ARGS to the invocation of the executable
+# --dlopen       LIB FUN : load LIB and call FUN before invocation of the executable
 
 # --prefix          ENV SEP VAL   : suffix/prefix ENV with VAL, separated by SEP
 # --suffix
@@ -153,6 +154,14 @@ makeCWrapper() {
                 n=$((n + 1))
                 [ $n -ge "$length" ] && main="$main#error makeCWrapper: $p takes 1 argument"$'\n'
             ;;
+            --dlopen)
+                cmd=$(callLibrary "${params[n + 1]}" "${params[n + 2]}")
+                main="$main$cmd"$'\n'
+                uses_dlfcn=1
+                uses_assert_success=1
+                n=$((n + 2))
+                [ $n -ge "$length" ] && main="$main#error makeCWrapper: $p takes 2 arguments"$'\n'
+            ;;
             --add-flag)
                 flagsBefore+=("${params[n + 1]}")
                 uses_assert=1
@@ -211,6 +220,7 @@ makeCWrapper() {
     [ -z "$uses_assert" ]   || printf '%s\n' "#include <assert.h>"
     [ -z "$uses_stdio" ]    || printf '%s\n' "#include <stdio.h>"
     [ -z "$uses_string" ]   || printf '%s\n' "#include <string.h>"
+    [ -z "$uses_dlfcn" ]    || printf '%s\n' "#include <dlfcn.h>"
     [ -z "$uses_assert_success" ] || printf '\n%s\n' "#define assert_success(e) do { if ((e) < 0) { perror(#e); abort(); } } while (0)"
     [ -z "$uses_sep_surround_check" ] || printf '\n%s\n' "$(setSepSurroundCheck)"
     [ -z "$uses_prefix" ] || printf '\n%s\n' "$(setEnvPrefixFn)"
@@ -244,6 +254,14 @@ addFlags() {
     done
     printf '%s\n' "${var}[${#before[@]} + argc + ${#after[@]}] = NULL;"
     printf '%s\n' "argv = $var;"
+}
+
+# dlopen LIB FUN
+callLibrary() {
+    local lib fun
+    lib=$(escapeStringLiteral "$1")
+    fun=$(escapeStringLiteral "$2")
+    printf '%s' "assert_success(call_library(\"$lib\",\"$fun\"));"
 }
 
 # chdir DIR
@@ -448,6 +466,24 @@ char *resolve_argv0(char *argv0) {
 "
 }
 
+callLibraryFn() {
+  printf '%s' "\
+void call_library(const char *path, const char *name) {
+  void (*func)();
+  void *handle = dlopen(path);
+  if (!handle) {
+    return -1;
+  }
+  func = dlsym(handle, name);
+  if (!func) {
+    return -1;
+  }
+  func();
+  return 0;
+}
+"
+}
+
 # Embed a C string which shows up as readable text in the compiled binary wrapper,
 # giving instructions for recreating the wrapper.
 # Keep in sync with makeBinaryWrapper.extractCmd
@@ -498,6 +534,10 @@ formatArgs() {
             --chdir)
                 formatArgsLine 1 "$@"
                 shift 1
+            ;;
+            --dlopen)
+                formatArgsLine 2 "$@"
+                shift 2
             ;;
             --add-flag)
                 formatArgsLine 1 "$@"
