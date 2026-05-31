@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  stdenv,
   writeText,
   libepoxy,
   vulkan-headers,
@@ -40,8 +41,13 @@ let
     	  strcat(socket_path, socket_name);
     	  char *virglrenderer_path = "${virglrenderer-minimal}/bin/virgl_test_server";
     	  char *virglrenderer_argv = {virglrenderer_path, "--venus", "--no-loop-or-fork", "--socket-path", socket_path, NULL};
+    	#ifdef __linux__
+    	  char *virglrenderer_envp = {"LD_LIBRARY_PATH=${stdenv.hostPlatform.libDir}", NULL};
+    	#else
+    	  char *virglrenderer_envp = {NULL};
+    	#endif
     	  pid_t pid;
-    	  if (posix_spawn(&pid, virglrenderer_path, NULL, NULL, virglrenderer_argv, (char*[]){NULL})) {
+    	  if (posix_spawn(&pid, virglrenderer_path, NULL, NULL, virglrenderer_argv, virglrenderer_envp)) {
     	    return -1;
     	  }
     	  // these are harmless if the preceding function fails, so don't bother with error handling
