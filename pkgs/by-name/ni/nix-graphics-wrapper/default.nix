@@ -42,7 +42,7 @@ let
     	  char *virglrenderer_path = "${virglrenderer-minimal}/bin/virgl_test_server";
     	  char *virglrenderer_argv = {virglrenderer_path, "--venus", "--no-loop-or-fork", "--socket-path", socket_path, NULL};
     	#ifdef __linux__
-    	  char *virglrenderer_envp = {"LD_LIBRARY_PATH=${stdenv.hostPlatform.libDir}", NULL};
+    	  char *virglrenderer_envp = {"LD_LIBRARY_PATH=/${stdenv.hostPlatform.libDir}/", NULL};
     	#else
     	  char *virglrenderer_envp = {NULL};
     	#endif
