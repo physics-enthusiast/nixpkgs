@@ -65,6 +65,7 @@ let
   nix-graphics-client = writeText "nix-graphics-client.c" ''
     #include <stdbool.h>
     #include <dirent.h>
+    #include <stdlib.h>
 
     void nix_graphics_wrapper_init() {
       bool start_virglrenderer = false;
@@ -73,3 +74,23 @@ let
         closedir(dir);
         return 0; // We're probably on NixOS (or something acting like it) and have working graphics already
       closedir(dir);
+
+      /*
+       * When setting a driver-search-path-override environment variable, also set a corresponding "shadow" variable
+       * with a copy of the value to enable the nix-graphics-client wrapper of child processes to determine if that
+       * variable has been modified. No special handling is needed for the case where none of the direct and indirect
+       * parent processes are wrapped, since all such variables are unset by default.
+       */
+    #define SETENV_SHADOWED(name, value) setenv(#name, (const char *)value, 1); setenv("__NIX_GRAPHICS_" #name, (const char *)value, 1)
+
+      /*
+       * If the value of the real and shadow environment variable are different, that indicates that either another
+       * wrapper (nixGL, nix-gl-host, or similar) or the application itself already has a set of drivers they'd
+       * like to use. These variables cause the loader to skip it's built-in search path, so whoever changed them
+       * presumably has drivers they know will definitely work. Since those drivers are likely faster than ours
+       * by virtue of not having the overhead of going through IPC, avoid setting this particular variable and
+       * let them handle it.
+       */
+    #define IS_ENV_CHANGED(name) (strcmp((const char*)getenv(#x) ,(const char*)getenv("__NIX_GRAPHICS_" #x)))
+    }
+  '';
